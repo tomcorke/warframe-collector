@@ -2,6 +2,7 @@ const request = require('request-promise-native');
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
+const chalk = require('chalk');
 
 function getWeapons() {
 
@@ -29,25 +30,46 @@ function getWeapons() {
   return request('http://warframe.wikia.com/wiki/Template:WeaponNav')
     .then(response => new JSDOM(response))
     .then((dom) => {
+      
       const { document } = dom.window;
       const tabs = document.querySelectorAll('#mw-content-text .tabber .tabbertab[title]');
+
       return Array.from(tabs)
         .filter(tab => !TAB_BLACKLIST.includes(tab.getAttribute('title')))
         .map((tab) => {
+
           const title = tab.getAttribute('title');
           const itemNodes = tab.querySelectorAll('table.navbox td a[href][title]');
+
           const items = Array.from(itemNodes)
             .filter(item => !item.getAttribute('title').startsWith('Category'))
             .filter(item => !NAME_BLACKLIST.includes(item.getAttribute('title')))
             .map((item) => {
+              
               const itemData = { name: item.getAttribute('title'), url: item.getAttribute('href') };
               const subcategoryNode = item.parentNode.previousSibling;
-              if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup') && !SKIP_SUBCATEGORY_FOR_CATEGORIES.includes(title)) {
-                itemData.subCategory = subcategoryNode.textContent.trim();
+              
+              if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup')) {
+                const subCategory = subcategoryNode.textContent.trim();
+                
+                if (!subCategory) {
+                  console.log(chalk.red('Invalid subcategory found for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.red('"'));
+                } else {
+                  if (SKIP_SUBCATEGORY_FOR_CATEGORIES.includes(title)) {
+                    console.log(chalk.yellow('Omitting subcategory "') + chalk.white(subCategory) + chalk.yellow('" by configuration for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.yellow('"'));
+                  } else {
+                    itemData.subCategory = subCategory;
+                  }
+                }
+
+              } else {
+                console.log(chalk.magenta('No subcategory found for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.magenta('"'));
               }
+
               return itemData;
             })
             .sort((a, b) => (a.name < b.name ? -1 : 1));
+            
           return { category: title, items };
         });
     });
