@@ -1,71 +1,39 @@
-const express = require('express');
-const fs = require('fs');
+const argv = require('minimist')(process.argv.slice(2));
 const path = require('path');
-const handlebars = require('handlebars');
-const compression = require('compression');
-const readline = require('readline');
-const keypress = require('keypress');
+const watch = require('node-watch');
+const webpack = require('webpack');
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
-keypress(process.stdin);
+require('./server_src');
 
-const app = express();
-app.use(compression());
+if (argv.watch) {
 
-const templateCache = {};
-function getTemplate(name, skipCache = false) {
-    if (templateCache[name] && !skipCache) { return templateCache[name]; }
-    const templatePath = path.resolve(__dirname, 'templates', `${name}`);
-    if (fs.existsSync(templatePath)) {
-        const fileContents = fs.readFileSync(templatePath, 'utf8');
-        const template = handlebars.compile(fileContents);
-        templateCache[name] = template;
-        return template;
+    function rebuild() {
+        console.log('Rebuilding client_src...');
+        return new Promise((resolve, reject) => {
+            compiler.run((err, stats) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    console.log(stats.toString({
+                        chunks: false,
+                        modules: false,
+                        colors: true
+                    }));
+                    resolve(stats);
+                }
+            });
+        });
     }
-    throw Error(`Template file not found: "${templatePath}"`);
+
+    const clientSrcPath = path.resolve(__dirname, 'client_src');
+    const compiler = webpack(require('./webpack.config.js'));
+
+    rebuild()
+        .catch(console.error)
+        .then(() => {
+            console.log(`Watching ${clientSrcPath} for changes`);
+            watch(clientSrcPath, { recursive: true }, () => {
+                rebuild();
+            });
+        });
 }
-
-const warframeData = fs.readFileSync('data.min.json', 'utf8');
-
-const lastUpdate = Date.now();
-app.get('/last', (req, res) => {
-    res.status(200).json(lastUpdate);
-});
-
-app.get('/', (req, res) => {
-    const template = getTemplate('index.html', req.query.noCache);
-    const context = {}
-    res.send(template(context));
-});
-
-app.get('/data', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'data.min.json'));
-});
-
-app.get('/script', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'dist', 'bundle.js'));
-});
-
-const port = 3000;
-app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-});
-
-function shutdown() {
-    console.log('Exiting');
-    process.exit();
-}
-function forceUpdate() {
-
-}
-
-process.on('SIGINT', shutdown);
-rl.on('SIGINT', shutdown);
-process.stdin.on('keypress', (ch, key) => {
-    if (key && key.ctrl && key.name === 'r') {
-        forceUpdate();
-    }
-});

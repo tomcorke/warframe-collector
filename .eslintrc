@@ -1,0 +1,9 @@
+{
+  "extends": "skyscanner",
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    "arrow-body-style": ["off"]
+  }
+}
