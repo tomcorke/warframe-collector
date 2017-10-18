@@ -2,10 +2,11 @@
   padding: 5px 10px;
   border-radius: 3px;
   background: #ccc;
-  margin-bottom: 5px;
+  margin: 0 5px 5px 0;
   cursor: pointer;
 
   &:hover {
     background: #d8d8d8;
+    text-decoration: underline;
   }
 }

@@ -4,6 +4,7 @@
     "browser": true
   },
   "rules": {
-    "arrow-body-style": ["off"]
+    "arrow-body-style": "off",
+    "arrow-parens": "off"
   }
 }

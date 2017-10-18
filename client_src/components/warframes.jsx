@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Category from './category';
 import Warframe from './warframe';
 
 const style = require('../styles/warframes.scss');
@@ -7,7 +8,9 @@ const style = require('../styles/warframes.scss');
 const Warframes = (props) => {
   return (
     <div className={style.warframes}>
-      {props.data.map(warframe => <Warframe key={warframe.name} data={warframe} />)}
+      <Category title="Warframes">
+        {props.data.map(warframe => <Warframe key={warframe.name} data={warframe} />)}
+      </Category>
     </div>
   );
 };

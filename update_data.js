@@ -14,11 +14,16 @@ function getWeapons() {
     'Hysteria',
     'Primal Fury',
     'Diwata',
+    'Peacemaker',
   ];
 
   const TAB_BLACKLIST = [
     'Research',
     'Prime',
+  ];
+
+  const SKIP_SUBCATEGORY_FOR_CATEGORIES = [
+    'Sentinel',
   ];
 
   return request('http://warframe.wikia.com/wiki/Template:WeaponNav')
@@ -37,7 +42,7 @@ function getWeapons() {
             .map((item) => {
               const itemData = { name: item.getAttribute('title'), url: item.getAttribute('href') };
               const subcategoryNode = item.parentNode.previousSibling;
-              if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup')) {
+              if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup') && !SKIP_SUBCATEGORY_FOR_CATEGORIES.includes(title)) {
                 itemData.subCategory = subcategoryNode.textContent.trim();
               }
               return itemData;
