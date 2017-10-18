@@ -1,6 +1,6 @@
 import React from 'react';
 
-const style = require('../styles/subcategory.scss');
+const style = require('../styles/category.scss');
 
 const Subcategory = props => (
   <div className={style.subcategory}>

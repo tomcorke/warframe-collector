@@ -1,6 +1,16 @@
+:global(html) {
+  font-size: 10px;
+}
+
 .app {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-content: flex-start;
+  font-family: sans-serif;
+  font-size: 1.4rem;
+
+  &__container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-content: flex-start;
+    flex-wrap: wrap;
+  }
 }

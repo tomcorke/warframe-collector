@@ -23,14 +23,16 @@ function getWeapons() {
     'Prime',
   ];
 
-  const SKIP_SUBCATEGORY_FOR_CATEGORIES = [
-    'Sentinel',
-  ];
+  const SKIP_SUBCATEGORY_FOR_CATEGORIES = [];
+
+  const CATEGORY_SUBCATEGORY_OVERRIDE = {
+    Sentinel: 'Weapon',
+  };
 
   return request('http://warframe.wikia.com/wiki/Template:WeaponNav')
     .then(response => new JSDOM(response))
     .then((dom) => {
-      
+
       const { document } = dom.window;
       const tabs = document.querySelectorAll('#mw-content-text .tabber .tabbertab[title]');
 
@@ -45,21 +47,19 @@ function getWeapons() {
             .filter(item => !item.getAttribute('title').startsWith('Category'))
             .filter(item => !NAME_BLACKLIST.includes(item.getAttribute('title')))
             .map((item) => {
-              
+
               const itemData = { name: item.getAttribute('title'), url: item.getAttribute('href') };
               const subcategoryNode = item.parentNode.previousSibling;
-              
+
               if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup')) {
-                const subCategory = subcategoryNode.textContent.trim();
-                
+                const subCategory = CATEGORY_SUBCATEGORY_OVERRIDE[title] || subcategoryNode.textContent.trim();
+
                 if (!subCategory) {
                   console.log(chalk.red('Invalid subcategory found for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.red('"'));
+                } else if (SKIP_SUBCATEGORY_FOR_CATEGORIES.includes(title)) {
+                  console.log(chalk.yellow('Omitting subcategory "') + chalk.white(subCategory) + chalk.yellow('" by configuration for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.yellow('"'));
                 } else {
-                  if (SKIP_SUBCATEGORY_FOR_CATEGORIES.includes(title)) {
-                    console.log(chalk.yellow('Omitting subcategory "') + chalk.white(subCategory) + chalk.yellow('" by configuration for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.yellow('"'));
-                  } else {
-                    itemData.subCategory = subCategory;
-                  }
+                  itemData.subCategory = subCategory;
                 }
 
               } else {
@@ -69,7 +69,7 @@ function getWeapons() {
               return itemData;
             })
             .sort((a, b) => (a.name < b.name ? -1 : 1));
-            
+
           return { category: title, items };
         });
     });
