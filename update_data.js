@@ -4,6 +4,16 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 
+Array.prototype.indexByProp = function(propertyName, stripProperty = true) {
+  return this.reduce((indexed, item) => {
+    indexed[item[propertyName]] = item;
+    if (stripProperty) {
+      delete item[propertyName];
+    }
+    return indexed;
+  }, {});
+}
+
 function getWeapons() {
 
   const NAME_BLACKLIST = [
@@ -38,7 +48,7 @@ function getWeapons() {
 
       return Array.from(tabs)
         .filter(tab => !TAB_BLACKLIST.includes(tab.getAttribute('title')))
-        .map((tab) => {
+        .reduce((allItems, tab) => {
 
           const title = tab.getAttribute('title');
           const itemNodes = tab.querySelectorAll('table.navbox td a[href][title]');
@@ -48,7 +58,7 @@ function getWeapons() {
             .filter(item => !NAME_BLACKLIST.includes(item.getAttribute('title')))
             .map((item) => {
 
-              const itemData = { name: item.getAttribute('title'), url: item.getAttribute('href') };
+              const itemData = { category: title, name: item.getAttribute('title'), url: item.getAttribute('href') };
               const subcategoryNode = item.parentNode.previousSibling;
 
               if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup')) {
@@ -70,8 +80,9 @@ function getWeapons() {
             })
             .sort((a, b) => (a.name < b.name ? -1 : 1));
 
-          return { category: title, items };
-        });
+          return allItems.concat(items);
+
+        }, []);
     });
 }
 
@@ -97,7 +108,12 @@ Promise.all([
   getWeapons(),
   getWarframes(),
 ])
-  .then(([weapons, warframes]) => ({ weapons, warframes }))
+  .then(([weapons, warframes]) => (
+    {
+      weapons: weapons.indexByProp('name'),
+      warframes: warframes.indexByProp('name'),
+    }
+  ))
   .then((data) => {
     fs.writeFileSync(path.resolve(__dirname, 'data', 'data.json'), JSON.stringify(data, null, 2));
     fs.writeFileSync(path.resolve(__dirname, 'data', 'data.min.json'), JSON.stringify(data));

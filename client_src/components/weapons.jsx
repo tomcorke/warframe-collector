@@ -5,43 +5,55 @@ import MasteryItem from './mastery-item';
 
 const style = require('../styles/weapons.scss');
 
+Array.prototype.getUnique = function getUnique(propertyName) {
+  return Array.from(new Set(this.map(item => item[propertyName])));
+};
+
 const identity = (x) => x;
 const byProp = (propName) => (a, b) => { return a[propName] < b[propName] ? -1 : 1; };
 
 const Weapons = props => {
 
-  const weapons = props.data.map(category => {
+  const weapons = props.data;
 
-    let itemsInCategory;
+  const mappedWeapons = Object.keys(weapons).map(name => ({ ...weapons[name], name }));
 
-    if (props.options && props.options.showSubCategories) {
+  const categories = mappedWeapons.getUnique('category');
 
-      const subCategories = Array.from(new Set(category.items.map(item => item.subCategory))).sort();
+  return categories
+    .map(category => {
+      const itemsInCategory = mappedWeapons.filter(item => item.category === category).sort(byProp('name'));
 
-      itemsInCategory = subCategories.map(subCategory => {
-        const items = category.items.filter(item => item.subCategory === subCategory).sort(byProp('name'));
-        return (
-          <Subcategory key={subCategory} title={subCategory}>
-            {items.map(item => <MasteryItem key={item.name} name={item.name} />)}
-          </Subcategory>
-        );
-      });
+      if (props.options && props.options.showSubCategories) {
+        const subCategories = itemsInCategory.getUnique('subCategory').sort();
 
-    } else {
+        return {
+          category,
+          items: subCategories.map(subCategory => {
+            const itemsInSubCategory = mappedWeapons.filter(item => item.subCategory === subCategory).sort(byProp('name'));
 
-      itemsInCategory = category.items.map(item => <MasteryItem key={item.name} name={item.name} />);
+            return (
+              <Subcategory key={subCategory} title={subCategory}>
+                {itemsInSubCategory
+                  .map(item => <MasteryItem key={item.name} name={item.name} />)}
+              </Subcategory>
+            );
+          }),
+        };
+      }
 
-    }
-
-    return (
-      <Category key={category.category} title={category.category}>
-        {itemsInCategory}
+      return {
+        category,
+        items: itemsInCategory
+          .map(item => <MasteryItem key={item.name} name={item.name} />),
+      };
+    })
+    .map(({category, items}) => (
+      <Category key={category} title={category}>
+        {items}
       </Category>
-    );
+    ));
 
-  });
-
-  return weapons;
 };
 
 export default Weapons;

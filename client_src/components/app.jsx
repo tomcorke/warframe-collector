@@ -16,14 +16,16 @@ function getDefaultOptions() {
 class App extends React.Component {
 
   constructor(props) {
-    super();
-    this.props = props;
+    super(props);
 
     this.state = {
       options: getDefaultOptions(),
+      warframes: props.data.warframes,
+      weapons: props.data.weapons,
     };
 
     this.onChangeShowSubCategories = this.onChangeShowSubCategories.bind(this);
+    this.onWarframeClick = this.onWarframeClick.bind(this);
   }
 
   onChangeShowSubCategories(event) {
@@ -32,13 +34,24 @@ class App extends React.Component {
       options: {
         ...this.state.options,
         showSubCategories: event.target.checked,
-      }
+      },
     })
   }
 
-  render() {
-    const { warframes, weapons } = this.props.data;
+  onWarframeClick(name) {
+    this.setState({
+      ...this.state,
+      warframes: {
+        ...this.state.warframes,
+        [name]: {
+          ...this.state.warframes[name],
+          mastered: !this.state.warframes[name].mastered,
+        },
+      },
+    });
+  }
 
+  render() {
     return (
       <div className={style.app}>
 
@@ -48,8 +61,18 @@ class App extends React.Component {
         />
 
         <div className={style.app__container}>
-          <Warframes data={warframes} options={this.state.options} />
-          <Weapons data={weapons} options={this.state.options} />
+
+          <Warframes
+            data={this.state.warframes}
+            options={this.state.options}
+            onClick={this.onWarframeClick}
+          />
+
+          <Weapons
+            data={this.state.weapons}
+            options={this.state.options}
+          />
+
         </div>
 
       </div>

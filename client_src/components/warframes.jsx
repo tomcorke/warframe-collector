@@ -5,18 +5,38 @@ import Warframe from './warframe';
 
 const style = require('../styles/warframes.scss');
 
-const Warframes = (props) => {
-  return (
-    <Category title="Warframes">
-      {props.data.map(warframe => <Warframe key={warframe.name} data={warframe} />)}
-    </Category>
-  );
-};
+class Warframes extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.onWarframeClick = this.onWarframeClick.bind(this);
+  }
+
+  onWarframeClick(name) {
+    this.props.onClick(name);
+  }
+
+  render() {
+    return (
+      <Category title="Warframes">
+        {Object.keys(this.props.data)
+          .map(name => (
+            <Warframe
+              key={name}
+              name={name}
+              data={this.props.data[name]}
+              onClick={() => this.onWarframeClick(name)}
+            />
+          ))}
+      </Category>
+    );
+  }
+
+}
 
 Warframes.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string,
-  })).isRequired,
+  data: PropTypes.shape().isRequired,
+  onClick: PropTypes.func.isRequired,
 };
 
 export default Warframes;

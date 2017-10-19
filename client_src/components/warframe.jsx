@@ -6,14 +6,20 @@ const style = require('../styles/warframe.scss');
 
 const Warframe = props => (
   <div className={style.warframe}>
-    <MasteryItem name={props.data.name} />
+    <MasteryItem
+      name={props.name}
+      mastered={props.data.mastered}
+      onClick={props.onClick}
+    />
   </div>
 );
 
 Warframe.propTypes = {
+  name: PropTypes.string.isRequired,
   data: PropTypes.shape({
-    name: PropTypes.string.isRequired,
+    mastered: PropTypes.bool,
   }).isRequired,
+  onClick: PropTypes.func.isRequired,
 };
 
 export default Warframe;
