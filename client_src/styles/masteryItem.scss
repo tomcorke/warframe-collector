@@ -7,25 +7,56 @@
   cursor: pointer;
   position: relative;
 
-  &:hover {
+  &:hover, &:focus {
     background: #d8d8d8;
     text-decoration: underline;
+  }
+
+  &:global(.owned) {
+    background: linear-gradient(90deg, orangered, #ccc);
+    color: white;
+  }
+
+  &:global(.mastered) {
+    background: linear-gradient(90deg, lime, #ccc);
+    color: black;
   }
 
   &__name {
   }
 
-  &__masteryIcon {
+  &__propertyIndicators {
     position: absolute;
-    right: 0.3rem;
+    right: 0;
     top: 0.3rem;
     bottom: 0.3rem;
-    width: 0.8rem;
-    background: red;
+    display: flex;
+    justify-content: flex-end;
+  }
 
-    &:global(.mastered) {
-      background: limegreen;
+  &__propertyIndicator {
+    width: 1rem;
+    border-radius: 0.3rem;
+    height: 100%;
+    margin-right: 0.3rem;
+    background: rgb(48, 0, 0);
+
+    &:global(.owned.on) {
+      background: rgb(255, 87, 87);
+      box-shadow: 0 0 3px 2px rgba(orangered, 0.5);
+    }
+
+    &:global(.mastered.on) {
+      background: rgb(202, 255, 202);
       box-shadow: 0 0 3px 2px rgba(limegreen, 0.5);
     }
+
+    &:focus {
+      box-shadow: 0 0 2px 4px white, inset 0 0 2px 1px white;
+    }
+  }
+
+  &:global(.mastered) &__propertyIndicator:global(.owned) {
+    display: none;
   }
 }

@@ -26,6 +26,8 @@ function getWeapons() {
     'Primal Fury',
     'Diwata',
     'Peacemaker',
+    'Maneuvers',
+    'Melee',
   ];
 
   const TAB_BLACKLIST = [
@@ -35,6 +37,10 @@ function getWeapons() {
 
   const SKIP_SUBCATEGORY_FOR_CATEGORIES = [];
 
+  const CATEGORY_RENAME = {
+    Archwing: 'Archwing Weapons',
+  };
+
   const CATEGORY_SUBCATEGORY_OVERRIDE = {
     Sentinel: 'Weapon',
   };
@@ -42,7 +48,6 @@ function getWeapons() {
   return request('http://warframe.wikia.com/wiki/Template:WeaponNav')
     .then(response => new JSDOM(response))
     .then((dom) => {
-
       const { document } = dom.window;
       const tabs = document.querySelectorAll('#mw-content-text .tabber .tabbertab[title]');
 
@@ -50,7 +55,8 @@ function getWeapons() {
         .filter(tab => !TAB_BLACKLIST.includes(tab.getAttribute('title')))
         .reduce((allItems, tab) => {
 
-          const title = tab.getAttribute('title');
+          let title = tab.getAttribute('title');
+          title = CATEGORY_RENAME[title] || title;
           const itemNodes = tab.querySelectorAll('table.navbox td a[href][title]');
 
           const items = Array.from(itemNodes)
@@ -71,7 +77,6 @@ function getWeapons() {
                 } else {
                   itemData.subCategory = subCategory;
                 }
-
               } else {
                 console.log(chalk.magenta('No subcategory found for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.magenta('"'));
               }
@@ -87,7 +92,6 @@ function getWeapons() {
 }
 
 function getWarframes() {
-
   const NAME_BLACKLIST = [
     /^warframe/i,
   ];
@@ -96,7 +100,7 @@ function getWarframes() {
     .then(response => new JSDOM(response))
     .then((dom) => {
       const { document } = dom.window;
-      const frames = document.querySelectorAll('#mw-content-text table.navbox td a[href][title]');
+      const frames = document.querySelectorAll('#mw-content-text table.navbox td:not(.navboxfooter) a[href][title]');
       return Array.from(frames)
         .map(frame => ({ name: frame.getAttribute('title').replace('/', ' '), url: frame.getAttribute('href') }))
         .filter(frame => !NAME_BLACKLIST.some(blacklist => blacklist.test(frame.name)))

@@ -5,6 +5,9 @@
   },
   "rules": {
     "arrow-body-style": "off",
-    "arrow-parens": "off"
+    "arrow-parens": "off",
+    "no-extend-native": "off",
+    "react/prop-types": "off",
+    "jsx-a11y/label-has-for": "off"
   }
 }

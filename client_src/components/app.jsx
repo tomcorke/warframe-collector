@@ -10,11 +10,13 @@ import style from '../styles/app.scss';
 function getDefaultOptions() {
   return {
     showSubCategories: true,
+    showOnlyUnmastered: false,
+    showOnlyOwned: false,
+    showOnlyUnowned: false,
   };
 }
 
 class App extends React.Component {
-
   constructor(props) {
     super(props);
 
@@ -24,28 +26,42 @@ class App extends React.Component {
       weapons: props.data.weapons,
     };
 
-    this.onChangeShowSubCategories = this.onChangeShowSubCategories.bind(this);
-    this.onWarframeClick = this.onWarframeClick.bind(this);
+    this.onChangeOption = this.onChangeOption.bind(this);
+    this.onWarframeChangeProperty = this.onWarframeChangeProperty.bind(this);
+    this.onWeaponChangeProperty = this.onWeaponChangeProperty.bind(this);
   }
 
-  onChangeShowSubCategories(event) {
+  onChangeOption(name, newValue) {
     this.setState({
       ...this.state,
       options: {
         ...this.state.options,
-        showSubCategories: event.target.checked,
+        [name]: newValue,
       },
-    })
+    });
   }
 
-  onWarframeClick(name) {
+  onWarframeChangeProperty(warframe, propertyName, newValue) {
     this.setState({
       ...this.state,
       warframes: {
         ...this.state.warframes,
-        [name]: {
-          ...this.state.warframes[name],
-          mastered: !this.state.warframes[name].mastered,
+        [warframe.name]: {
+          ...this.state.warframes[warframe.name],
+          [propertyName]: newValue,
+        },
+      },
+    });
+  }
+
+  onWeaponChangeProperty(weapon, propertyName, newValue) {
+    this.setState({
+      ...this.state,
+      weapons: {
+        ...this.state.weapons,
+        [weapon.name]: {
+          ...this.state.weapons[weapon.name],
+          [propertyName]: newValue,
         },
       },
     });
@@ -57,7 +73,7 @@ class App extends React.Component {
 
         <Options
           options={this.state.options}
-          onChangeShowSubCategories={this.onChangeShowSubCategories}
+          onChange={this.onChangeOption}
         />
 
         <div className={style.app__container}>
@@ -65,12 +81,13 @@ class App extends React.Component {
           <Warframes
             data={this.state.warframes}
             options={this.state.options}
-            onClick={this.onWarframeClick}
+            onChangeProperty={this.onWarframeChangeProperty}
           />
 
           <Weapons
             data={this.state.weapons}
             options={this.state.options}
+            onChangeProperty={this.onWeaponChangeProperty}
           />
 
         </div>
