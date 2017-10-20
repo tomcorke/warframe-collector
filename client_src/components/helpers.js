@@ -10,7 +10,7 @@ export function filterByOptions(array, options) {
   }
 
   if (options.showOnlyUnowned) {
-    newArray = newArray.filter(item => !item.owned);
+    newArray = newArray.filter(item => !item.owned && !item.mastered);
   }
 
   return newArray;
