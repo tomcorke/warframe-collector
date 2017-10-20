@@ -3,14 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const handlebars = require('handlebars');
 const compression = require('compression');
-const readline = require('readline');
-const keypress = require('keypress');
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-keypress(process.stdin);
 
 const app = express();
 app.use(compression());
@@ -47,23 +39,11 @@ app.get('/script.js', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../client_dist/bundle.js'));
 });
 
-const port = 3000;
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
-
-function shutdown() {
-  console.log('Exiting');
-  process.exit();
-}
-function forceUpdate() {
-
-}
-
-process.on('SIGINT', shutdown);
-rl.on('SIGINT', shutdown);
-process.stdin.on('keypress', (ch, key) => {
-  if (key && key.ctrl && key.name === 'r') {
-    forceUpdate();
-  }
-});
+module.exports = {
+  run: (config = {}) => {
+    const { port = 3000 } = config;
+    app.listen(port, () => {
+      console.log(`Server listening on port ${port}`);
+    });
+  },
+};
