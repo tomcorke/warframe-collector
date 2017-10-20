@@ -227,7 +227,7 @@ Promise.all([
     const types = Object.keys(data);
 
     types.forEach(type => {
-      const existingDataForType = existingData[type];
+      const existingDataForType = existingData[type] || {};
 
       const newCount = Object.keys(data[type]).length;
 
