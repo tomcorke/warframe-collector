@@ -8,12 +8,6 @@ import './helpers';
 
 const style = require('../styles/weapons.scss');
 
-Array.prototype.getUnique = function getUnique(propertyName) {
-  return Array.from(new Set(this.map(item => item[propertyName])));
-};
-
-const byProp = (propName) => (a, b) => { return a[propName] < b[propName] ? -1 : 1; };
-
 const Weapon = props => (
   <div className={style.weapon}>
     <MasteryItem
@@ -49,19 +43,19 @@ const Weapons = props => {
 
   return categories
     .map(category => {
-      const itemsInCategory = mappedWeapons.filter(item => item.category === category).sort(byProp('name'));
+      const itemsInCategory = mappedWeapons.filter(item => item.category === category).sortByProp('name');
 
       if (props.options && props.options.showSubCategories) {
-        const subCategories = itemsInCategory.getUnique('subCategory').sort();
+        const subcategories = itemsInCategory.getUnique('subcategory').sort();
 
         return {
           category,
-          items: subCategories.map(subCategory => {
-            const itemsInSubCategory = itemsInCategory.filter(item => item.subCategory === subCategory).sort(byProp('name'));
+          items: subcategories.map(subcategory => {
+            const itemsInSubcategory = itemsInCategory.filter(item => item.subcategory === subcategory).sortByProp('name');
 
             return (
-              <Subcategory key={subCategory} title={subCategory}>
-                {itemsInSubCategory.map(createWeaponComponent)}
+              <Subcategory key={subcategory} title={subcategory}>
+                {itemsInSubcategory.map(createWeaponComponent)}
               </Subcategory>
             );
           }),

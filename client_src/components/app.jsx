@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import Options from './options';
 import Warframes from './warframes';
 import Weapons from './weapons';
+import Companions from './companions';
 
 import style from '../styles/app.scss';
 
@@ -24,11 +25,13 @@ class App extends React.Component {
       options: getDefaultOptions(),
       warframes: props.data.warframes,
       weapons: props.data.weapons,
+      companions: props.data.companions,
     };
 
     this.onChangeOption = this.onChangeOption.bind(this);
     this.onWarframeChangeProperty = this.onWarframeChangeProperty.bind(this);
     this.onWeaponChangeProperty = this.onWeaponChangeProperty.bind(this);
+    this.onCompanionChangeProperty = this.onCompanionChangeProperty.bind(this);
   }
 
   onChangeOption(name, newValue) {
@@ -67,6 +70,19 @@ class App extends React.Component {
     });
   }
 
+  onCompanionChangeProperty(companion, propertyName, newValue) {
+    this.setState({
+      ...this.state,
+      companions: {
+        ...this.state.companions,
+        [companion.name]: {
+          ...this.state.companions[companion.name],
+          [propertyName]: newValue,
+        },
+      },
+    });
+  }
+
   render() {
     return (
       <div className={style.app}>
@@ -88,6 +104,12 @@ class App extends React.Component {
             data={this.state.weapons}
             options={this.state.options}
             onChangeProperty={this.onWeaponChangeProperty}
+          />
+
+          <Companions
+            data={this.state.companions}
+            options={this.state.options}
+            onChangeProperty={this.onCompanionChangeProperty}
           />
 
         </div>
