@@ -263,9 +263,9 @@ Promise.all([
       ].join(''));
     });
 
-    console.log(chalk.green('Writing "') + chalk.white(dataJsonPath) + chalk.green('"'));
+    console.log(chalk.white('Writing ') + chalk.green(dataJsonPath) + chalk.white('...'));
     fs.writeFileSync(dataJsonPath, JSON.stringify(data, null, 2));
-    console.log(chalk.green('Writing "') + chalk.white(minifiedDataJsonPath) + chalk.green('"'));
+    console.log(chalk.white('Writing ') + chalk.green(minifiedDataJsonPath) + chalk.white('...'));
     fs.writeFileSync(minifiedDataJsonPath, JSON.stringify(data));
   })
   .catch(console.error);
