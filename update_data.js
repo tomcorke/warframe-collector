@@ -15,6 +15,7 @@ Array.prototype.indexByProp = function(propertyName, stripProperty = true) {
 }
 
 function getWeapons() {
+  console.log(chalk.green('Getting weapons...'));
 
   const NAME_BLACKLIST = [
     'Rampart',
@@ -92,6 +93,7 @@ function getWeapons() {
 }
 
 function getWarframes() {
+  console.log(chalk.green('Getting warframes...'));
   const NAME_BLACKLIST = [
     /^warframe/i,
   ];
@@ -108,18 +110,54 @@ function getWarframes() {
     });
 }
 
+function signedColouredNumber(number) {
+  if (number > 0) {
+    return chalk.green('+' + number);
+  } else if (number < 0) {
+    return chalk.red(number);
+  } else {
+    return chalk.white('+0');
+  }
+}
+
 Promise.all([
   getWeapons(),
   getWarframes(),
 ])
-  .then(([weapons, warframes]) => (
-    {
+  .then(([weapons, warframes]) => {
+    console.log(chalk.green('Indexing items by name...'));
+    return {
       weapons: weapons.indexByProp('name'),
       warframes: warframes.indexByProp('name'),
-    }
-  ))
+    };
+  })
   .then((data) => {
-    fs.writeFileSync(path.resolve(__dirname, 'data', 'data.json'), JSON.stringify(data, null, 2));
-    fs.writeFileSync(path.resolve(__dirname, 'data', 'data.min.json'), JSON.stringify(data));
+
+    const dataJsonPath = path.resolve(__dirname, 'data', 'data.json');
+    const minifiedDataJsonPath = path.resolve(__dirname, 'data', 'data.min.json');
+
+    const warframeCount = Object.keys(data.warframes).length;
+    const weaponsCount = Object.keys(data.weapons).length;
+
+    let currentWarframeCount = 0;
+    let currentWeaponsCount = 0;
+
+    if (fs.existsSync(dataJsonPath)) {
+      // eslint-disable-next-line
+      const currentData = require(dataJsonPath);
+      currentWarframeCount = Object.keys(currentData.warframes).length;
+      currentWeaponsCount = Object.keys(currentData.weapons).length;
+    }
+
+    const warframeCountDiff = warframeCount - currentWarframeCount;
+    const weaponsCountDiff = weaponsCount - currentWeaponsCount;
+
+    console.log(chalk.white('Found ') + chalk.green(warframeCount) + chalk.white(' (') + signedColouredNumber(warframeCountDiff) + chalk.white(') warframes'));
+    console.log(chalk.white('Found ') + chalk.green(weaponsCount) + chalk.white(' (') + signedColouredNumber(weaponsCountDiff) + chalk.white(') weapons'));
+
+    console.log(chalk.green('Writing "') + chalk.white(dataJsonPath) + chalk.green('"'));
+    fs.writeFileSync(dataJsonPath, JSON.stringify(data, null, 2));
+    console.log(chalk.green('Writing "') + chalk.white(minifiedDataJsonPath) + chalk.green('"'));
+    fs.writeFileSync(minifiedDataJsonPath, JSON.stringify(data));
   })
   .catch(console.error);
