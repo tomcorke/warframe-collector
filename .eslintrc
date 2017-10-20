@@ -8,6 +8,7 @@
     "arrow-parens": "off",
     "no-extend-native": "off",
     "react/prop-types": "off",
-    "jsx-a11y/label-has-for": "off"
+    "jsx-a11y/label-has-for": "off",
+    "padded-blocks": "off"
   }
 }

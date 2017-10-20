@@ -4,14 +4,20 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 
-Array.prototype.indexByProp = function(propertyName, stripProperty = true) {
+Array.prototype.indexByProp = function indexByProp(prop, stripProperty = true) {
   return this.reduce((indexed, item) => {
-    indexed[item[propertyName]] = item;
+    indexed[item[prop]] = item; // eslint-disable-line no-param-reassign
     if (stripProperty) {
-      delete item[propertyName];
+      delete item[prop]; // eslint-disable-line no-param-reassign
     }
     return indexed;
   }, {});
+};
+Array.prototype.sortByProp = function sortByProp(prop) {
+  return this.sort((a, b) => { return a[prop] < b[prop] ? -1 : 1; });
+};
+Array.prototype.getUnique = function getUnique() {
+  return Array.from(new Set(this));
 }
 
 function getWeapons() {
@@ -32,19 +38,10 @@ function getWeapons() {
   ];
 
   const TAB_BLACKLIST = [
+    'Archwing',
     'Research',
     'Prime',
   ];
-
-  const SKIP_SUBCATEGORY_FOR_CATEGORIES = [];
-
-  const CATEGORY_RENAME = {
-    Archwing: 'Archwing Weapons',
-  };
-
-  const CATEGORY_SUBCATEGORY_OVERRIDE = {
-    Sentinel: 'Weapon',
-  };
 
   return request('http://warframe.wikia.com/wiki/Template:WeaponNav')
     .then(response => new JSDOM(response))
@@ -56,8 +53,7 @@ function getWeapons() {
         .filter(tab => !TAB_BLACKLIST.includes(tab.getAttribute('title')))
         .reduce((allItems, tab) => {
 
-          let title = tab.getAttribute('title');
-          title = CATEGORY_RENAME[title] || title;
+          const title = tab.getAttribute('title');
           const itemNodes = tab.querySelectorAll('table.navbox td a[href][title]');
 
           const items = Array.from(itemNodes)
@@ -69,12 +65,10 @@ function getWeapons() {
               const subcategoryNode = item.parentNode.previousElementSibling;
 
               if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup')) {
-                const subcategory = CATEGORY_SUBCATEGORY_OVERRIDE[title] || subcategoryNode.textContent.trim();
+                const subcategory = subcategoryNode.textContent.trim();
 
                 if (!subcategory) {
                   console.log(chalk.red('Invalid subcategory found for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.red('"'));
-                } else if (SKIP_SUBCATEGORY_FOR_CATEGORIES.includes(title)) {
-                  console.log(chalk.yellow('Omitting subcategory "') + chalk.white(subcategory) + chalk.yellow('" by configuration for item "') + chalk.white(`${title} / ${itemData.name}`) + chalk.yellow('"'));
                 } else {
                   itemData.subcategory = subcategory;
                 }
@@ -84,7 +78,7 @@ function getWeapons() {
 
               return itemData;
             })
-            .sort((a, b) => (a.name < b.name ? -1 : 1));
+            .sortByProp('name');
 
           return allItems.concat(items);
 
@@ -109,7 +103,37 @@ function getWarframes() {
           return itemData;
         })
         .filter(frame => !NAME_BLACKLIST.some(blacklist => blacklist.test(frame.name)))
-        .sort((a, b) => (a.name < b.name ? -1 : 1));
+        .sortByProp('name');
+    });
+}
+
+function getArchwings() {
+  console.log(chalk.green('Getting archwings...'));
+
+  return request('http://warframe.wikia.com/wiki/Template:ArchwingNav')
+    .then(response => new JSDOM(response))
+    .then((dom) => {
+      const { document } = dom.window;
+      const tabs = document.querySelectorAll('#mw-content-text .tabber .tabbertab[title]');
+
+
+      return Array.from(tabs)
+        .reduce((allItems, tab) => {
+
+          const title = tab.getAttribute('title');
+          const itemNodes = tab.querySelectorAll('table.navbox td a[href][title]');
+
+          const items = Array.from(itemNodes)
+            .filter(item => !item.getAttribute('title').startsWith('Category'))
+            .map((item) => {
+              const itemData = { subcategory: title, name: item.getAttribute('title'), url: item.getAttribute('href') };
+              return itemData;
+            })
+            .sortByProp('name');
+
+          return allItems.concat(items);
+
+        }, []);
     });
 }
 
@@ -125,8 +149,8 @@ function getCompanions() {
         .map(companion => {
           const itemData = { name: companion.getAttribute('title').replace('/', ' '), url: companion.getAttribute('href') };
 
-          // td > th > a
-          // td > tr > a
+          // td > th.navboxhead > a
+          // td > tr > a (item)
           const categoryNode = companion.parentNode.parentNode.previousElementSibling.querySelector('th.navboxhead a[title][href]');
           if (categoryNode) {
             const category = categoryNode.getAttribute('title');
@@ -135,8 +159,7 @@ function getCompanions() {
 
           return itemData;
         })
-        // .filter(companion => !NAME_BLACKLIST.some(blacklist => blacklist.test(companion.name)))
-        .sort((a, b) => (a.name < b.name ? -1 : 1));
+        .sortByProp('name');
     });
 }
 
@@ -146,50 +169,99 @@ function signedColouredNumber(number) {
   } else if (number < 0) {
     return chalk.red(`${number}`);
   }
-  return chalk.white('+0');
+  return chalk.gray('0');
 }
 
 Promise.all([
   getWeapons(),
   getWarframes(),
+  getArchwings(),
   getCompanions(),
 ])
-  .then(([weapons, warframes, companions]) => {
-    console.log(chalk.green('Indexing items by name...'));
+  .then(([weapons, warframes, archwings, companions]) => {
     return {
-      weapons: weapons.indexByProp('name'),
-      warframes: warframes.indexByProp('name'),
-      companions: companions.indexByProp('name'),
+      weapons,
+      warframes,
+      archwings,
+      companions,
     };
+  })
+  .then((data) => {
+    console.log(chalk.green('Reorganising sentinel weapons into companions category...'));
+
+    const sentinelWeapons = data.weapons.filter(weapon => weapon.category === 'Sentinel');
+    sentinelWeapons.forEach(weapon => {
+      const index = data.weapons.indexOf(weapon);
+      data.weapons.splice(index, 1);
+
+      const newWeapon = Object.assign({}, weapon);
+      delete newWeapon.category;
+      newWeapon.subcategory = 'Sentinel Weapons';
+
+      data.companions.push(newWeapon);
+    });
+
+    return data;
+  })
+  .then((data) => {
+
+    console.log(chalk.green('Indexing items by name...'));
+    return Object.assign(
+      {},
+      data,
+      {
+        weapons: data.weapons.indexByProp('name'),
+        warframes: data.warframes.indexByProp('name'),
+        archwings: data.archwings.indexByProp('name'),
+        companions: data.companions.indexByProp('name'),
+      },
+    );
   })
   .then((data) => {
 
     const dataJsonPath = path.resolve(__dirname, 'data', 'data.json');
     const minifiedDataJsonPath = path.resolve(__dirname, 'data', 'data.min.json');
 
-    const warframeCount = Object.keys(data.warframes).length;
-    const weaponsCount = Object.keys(data.weapons).length;
-    const companionCount = Object.keys(data.companions).length;
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const existingData = fs.existsSync(dataJsonPath) ? require(dataJsonPath) : {};
+    const types = Object.keys(data);
 
-    let currentWarframeCount = 0;
-    let currentWeaponsCount = 0;
-    let currentCompanionCount = 0;
+    types.forEach(type => {
+      const existingDataForType = existingData[type];
 
-    if (fs.existsSync(dataJsonPath)) {
-      // eslint-disable-next-line
-      const currentData = require(dataJsonPath);
-      currentWarframeCount = currentData.warframes ? Object.keys(currentData.warframes).length : 0;
-      currentWeaponsCount = currentData.weapons ? Object.keys(currentData.weapons).length : 0;
-      currentCompanionCount = currentData.companions ? Object.keys(currentData.companions).length : 0;
-    }
+      const newCount = Object.keys(data[type]).length;
 
-    const warframeCountDiff = warframeCount - currentWarframeCount;
-    const weaponsCountDiff = weaponsCount - currentWeaponsCount;
-    const companionCountDiff = companionCount - currentCompanionCount;
+      const allItemNames = Object.keys(data[type]).concat(Object.keys(existingDataForType)).getUnique();
 
-    console.log(chalk.white('Found ') + chalk.green(warframeCount) + chalk.white(' (') + signedColouredNumber(warframeCountDiff) + chalk.white(') warframes'));
-    console.log(chalk.white('Found ') + chalk.green(weaponsCount) + chalk.white(' (') + signedColouredNumber(weaponsCountDiff) + chalk.white(') weapons'));
-    console.log(chalk.white('Found ') + chalk.green(companionCount) + chalk.white(' (') + signedColouredNumber(companionCountDiff) + chalk.white(') compaions'));
+      const changeCount = allItemNames
+        .reduce(({ added, modified, removed }, name) => {
+          const newItem = data[type][name];
+          const existingItem = existingDataForType[name];
+
+          if (newItem && !existingItem) {
+            added += 1;
+          } else if (existingItem && !newItem) {
+            removed -= 1;
+          } else if (JSON.stringify(newItem) !== JSON.stringify(existingItem)) {
+            modified += 1;
+          }
+
+          return { added, modified, removed };
+
+        }, { added: 0, modified: 0, removed: 0 });
+
+      console.log([
+        chalk.white('Found '),
+        chalk.green(newCount),
+        chalk.white(' ('),
+        signedColouredNumber(changeCount.added),
+        chalk.white('/'),
+        signedColouredNumber(changeCount.modified),
+        chalk.white('/'),
+        signedColouredNumber(changeCount.removed),
+        chalk.white(`) ${type}`),
+      ].join(''));
+    });
 
     console.log(chalk.green('Writing "') + chalk.white(dataJsonPath) + chalk.green('"'));
     fs.writeFileSync(dataJsonPath, JSON.stringify(data, null, 2));
