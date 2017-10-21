@@ -2,9 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import Options from './options';
-import Warframes from './warframes';
-import Weapons from './weapons';
-import Companions from './companions';
+import ItemGroup from './itemGroup';
 
 import style from '../styles/app.scss';
 
@@ -23,15 +21,14 @@ class App extends React.Component {
 
     this.state = {
       options: getDefaultOptions(),
-      warframes: props.data.warframes,
-      weapons: props.data.weapons,
-      companions: props.data.companions,
+      Warframes: props.data.warframes,
+      Weapons: props.data.weapons,
+      Archwings: props.data.archwings,
+      Companions: props.data.companions,
     };
 
     this.onChangeOption = this.onChangeOption.bind(this);
-    this.onWarframeChangeProperty = this.onWarframeChangeProperty.bind(this);
-    this.onWeaponChangeProperty = this.onWeaponChangeProperty.bind(this);
-    this.onCompanionChangeProperty = this.onCompanionChangeProperty.bind(this);
+    this.onChangeItemProperty = this.onChangeItemProperty.bind(this);
   }
 
   onChangeOption(name, newValue) {
@@ -44,39 +41,13 @@ class App extends React.Component {
     });
   }
 
-  onWarframeChangeProperty(warframe, propertyName, newValue) {
+  onChangeItemProperty(itemType, item, propertyName, newValue) {
     this.setState({
       ...this.state,
-      warframes: {
-        ...this.state.warframes,
-        [warframe.name]: {
-          ...this.state.warframes[warframe.name],
-          [propertyName]: newValue,
-        },
-      },
-    });
-  }
-
-  onWeaponChangeProperty(weapon, propertyName, newValue) {
-    this.setState({
-      ...this.state,
-      weapons: {
-        ...this.state.weapons,
-        [weapon.name]: {
-          ...this.state.weapons[weapon.name],
-          [propertyName]: newValue,
-        },
-      },
-    });
-  }
-
-  onCompanionChangeProperty(companion, propertyName, newValue) {
-    this.setState({
-      ...this.state,
-      companions: {
-        ...this.state.companions,
-        [companion.name]: {
-          ...this.state.companions[companion.name],
+      [itemType]: {
+        ...this.state[itemType],
+        [item.name]: {
+          ...this.state[itemType][item.name],
           [propertyName]: newValue,
         },
       },
@@ -94,23 +65,18 @@ class App extends React.Component {
 
         <div className={style.app__container}>
 
-          <Warframes
-            data={this.state.warframes}
-            options={this.state.options}
-            onChangeProperty={this.onWarframeChangeProperty}
-          />
-
-          <Weapons
-            data={this.state.weapons}
-            options={this.state.options}
-            onChangeProperty={this.onWeaponChangeProperty}
-          />
-
-          <Companions
-            data={this.state.companions}
-            options={this.state.options}
-            onChangeProperty={this.onCompanionChangeProperty}
-          />
+          {
+            ['Warframes', 'Weapons', 'Archwings', 'Companions']
+              .map(itemType => (
+                <ItemGroup
+                  key={itemType}
+                  itemCategory={itemType}
+                  items={this.state[itemType]}
+                  options={this.state.options}
+                  onChangeProperty={(...args) => this.onChangeItemProperty(itemType, ...args)}
+                />
+              ))
+            }
 
         </div>
 

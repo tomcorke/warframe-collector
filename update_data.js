@@ -61,7 +61,11 @@ function getWeapons() {
             .filter(item => !NAME_BLACKLIST.includes(item.getAttribute('title')))
             .map((item) => {
 
-              const itemData = { category: title, name: item.getAttribute('title'), url: item.getAttribute('href') };
+              const itemData = {
+                category: title,
+                name: item.getAttribute('title'),
+                url: item.getAttribute('href'),
+              };
               const subcategoryNode = item.parentNode.previousElementSibling;
 
               if (subcategoryNode && subcategoryNode.classList && subcategoryNode.classList.contains('navboxgroup')) {
@@ -99,7 +103,10 @@ function getWarframes() {
       const frames = document.querySelectorAll('#mw-content-text table.navbox td:not(.navboxfooter) a[href][title]');
       return Array.from(frames)
         .map(frame => {
-          const itemData = { name: frame.getAttribute('title').replace('/', ' '), url: frame.getAttribute('href') };
+          const itemData = {
+            name: frame.getAttribute('title').replace('/', ' '),
+            url: frame.getAttribute('href'),
+          };
           return itemData;
         })
         .filter(frame => !NAME_BLACKLIST.some(blacklist => blacklist.test(frame.name)))
@@ -126,7 +133,11 @@ function getArchwings() {
           const items = Array.from(itemNodes)
             .filter(item => !item.getAttribute('title').startsWith('Category'))
             .map((item) => {
-              const itemData = { subcategory: title, name: item.getAttribute('title'), url: item.getAttribute('href') };
+              const itemData = {
+                subcategory: title,
+                name: item.getAttribute('title').replace('/', ' '),
+                url: item.getAttribute('href'),
+              };
               return itemData;
             })
             .sortByProp('name');
@@ -147,7 +158,10 @@ function getCompanions() {
       const companions = document.querySelectorAll('#mw-content-text table.navbox td:not(.navboxfooter) a[href][title]');
       return Array.from(companions)
         .map(companion => {
-          const itemData = { name: companion.getAttribute('title').replace('/', ' '), url: companion.getAttribute('href') };
+          const itemData = {
+            name: companion.getAttribute('title').replace('/', ' '),
+            url: companion.getAttribute('href'),
+          };
 
           // td > th.navboxhead > a
           // td > tr > a (item)
@@ -224,26 +238,27 @@ Promise.all([
 
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const existingData = fs.existsSync(dataJsonPath) ? require(dataJsonPath) : {};
-    const types = Object.keys(data);
+    const types = Object.keys(data).concat(Object.keys(existingData)).getUnique();
 
     types.forEach(type => {
       const existingDataForType = existingData[type] || {};
+      const newData = data[type] || {};
 
-      const newCount = Object.keys(data[type]).length;
+      const newCount = Object.keys(newData).length;
 
-      const allItemNames = Object.keys(data[type]).concat(Object.keys(existingDataForType)).getUnique();
+      const allItemNames = Object.keys(newData).concat(Object.keys(existingDataForType)).getUnique();
 
       const changeCount = allItemNames
         .reduce(({ added, modified, removed }, name) => {
-          const newItem = data[type][name];
+          const newItem = newData[name];
           const existingItem = existingDataForType[name];
 
           if (newItem && !existingItem) {
-            added += 1;
+            added += 1; // eslint-disable-line no-param-reassign
           } else if (existingItem && !newItem) {
-            removed -= 1;
+            removed -= 1; // eslint-disable-line no-param-reassign
           } else if (JSON.stringify(newItem) !== JSON.stringify(existingItem)) {
-            modified += 1;
+            modified += 1; // eslint-disable-line no-param-reassign
           }
 
           return { added, modified, removed };
