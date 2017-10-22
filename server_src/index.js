@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const handlebars = require('handlebars');
 const compression = require('compression');
+const db = require('./db');
 
 const app = express();
 app.use(compression());
@@ -42,8 +43,19 @@ app.get('/script.js', (req, res) => {
 module.exports = {
   run: (config = {}) => {
     const { port = 3000 } = config;
-    app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
-    });
+
+    console.log('Initialising database...');
+    db.init()
+      .then(() => {
+
+        app.listen(port, () => {
+          console.log(`Server listening on port ${port}`);
+        });
+
+      })
+      .catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
   },
 };

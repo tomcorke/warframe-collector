@@ -15,17 +15,40 @@ function getDefaultOptions() {
   };
 }
 
+const DATA_ITEM_MAP = {
+  Warframes: 'warframes',
+  Weapons: 'weapons',
+  Archwings: 'archwings',
+  Companions: 'companions',
+};
+
+function mapDataItems(data, key) {
+  const itemNames = Object.keys(data[key]);
+  return itemNames.reduce((items, name) => {
+    const item = data[key][name];
+    return {
+      ...items,
+      [name]: {
+        ...item,
+        key: [key, item.category, item.subcategory, name].join('_').replace(' ', '-'),
+      },
+    };
+  }, {});
+}
+
 class App extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
       options: getDefaultOptions(),
-      Warframes: props.data.warframes,
-      Weapons: props.data.weapons,
-      Archwings: props.data.archwings,
-      Companions: props.data.companions,
     };
+
+    Object.keys(DATA_ITEM_MAP)
+      .forEach(key => {
+        this.state[key] = mapDataItems(props.data, DATA_ITEM_MAP[key]);
+      });
+    console.log(this.state);
 
     this.onChangeOption = this.onChangeOption.bind(this);
     this.onChangeItemProperty = this.onChangeItemProperty.bind(this);
@@ -66,7 +89,7 @@ class App extends React.Component {
         <div className={style.app__container}>
 
           {
-            ['Warframes', 'Weapons', 'Archwings', 'Companions']
+            Object.keys(DATA_ITEM_MAP)
               .map(itemType => (
                 <ItemGroup
                   key={itemType}

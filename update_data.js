@@ -233,8 +233,15 @@ Promise.all([
   })
   .then((data) => {
 
-    const dataJsonPath = path.resolve(__dirname, 'data', 'data.json');
-    const minifiedDataJsonPath = path.resolve(__dirname, 'data', 'data.min.json');
+    const DATA_DIR = 'data';
+
+    const dataDirPath = path.resolve(__dirname, DATA_DIR);
+    if (!fs.existsSync(dataDirPath)) {
+      fs.mkdirSync(dataDirPath);
+    }
+
+    const dataJsonPath = path.resolve(__dirname, DATA_DIR, 'data.json');
+    const minifiedDataJsonPath = path.resolve(__dirname, DATA_DIR, 'data.min.json');
 
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const existingData = fs.existsSync(dataJsonPath) ? require(dataJsonPath) : {};
