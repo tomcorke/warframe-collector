@@ -20,8 +20,16 @@ Array.prototype.filterByOptions = function filterArrayByOptions(options) {
   return filterByOptions(this, options);
 };
 
+export function sortBy(array, propGetter) {
+  return array.sort((a, b) => { return propGetter(a) < propGetter(b) ? -1 : 1; });
+}
+
 export function sortByProp(array, propName) {
-  return array.sort((a, b) => { return a[propName] < b[propName] ? -1 : 1; });
+  return sortBy(array, item => item[propName]);
+}
+
+Array.prototype.sortBy = function sortArrayBy(propGetter) {
+  return sortBy(this, propGetter);
 }
 
 Array.prototype.sortByProp = function sortArrayByProp(propName) {
@@ -38,6 +46,7 @@ Array.prototype.getUnique = function arrayGetUnique(propName) {
 
 export default {
   filterByOptions,
+  sortBy,
   sortByProp,
   getUnique,
 };

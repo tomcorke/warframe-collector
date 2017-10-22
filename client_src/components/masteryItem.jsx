@@ -53,6 +53,7 @@ class MasteryItem extends React.Component {
       <div
         className={classnames(style.masteryItem, enabledItemProperties)}
         onClick={this.onClick}
+
         onKeyPress={this.onClick}
         role="button"
         tabIndex={0}

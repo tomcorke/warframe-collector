@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './helpers';
 
 import style from '../styles/options.scss';
 
@@ -19,8 +20,8 @@ const Checkbox = props => (
       <input
         type="checkbox"
         onChange={e => props.onChange(props.name, e.target.checked)}
-        checked={props.options[props.name]}
-        value={props.options[props.name]}
+        checked={props.value}
+        value={props.value}
       />
       {props.children}
     </label>
@@ -30,53 +31,70 @@ const Checkbox = props => (
 Checkbox.propTypes = {
   onChange: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,
-  options: PropTypes.shape().isRequired,
   children: PropTypes.node.isRequired,
 };
 
-const Options = props => (
-  <div className={style.options}>
+class Options extends React.Component {
 
-    <Checkbox
-      name="showSubCategories"
-      options={props.options}
-      onChange={props.onChange}
-    >
-      Show subcategories
-    </Checkbox>
+  constructor(props) {
+    super(props);
 
-    <Checkbox
-      name="showOnlyOwned"
-      options={props.options}
-      onChange={props.onChange}
-    >
-      Show only owned
-    </Checkbox>
+    this.createComponentForOption = this.createComponentForOption.bind(this);
+    this.createCheckboxForOption = this.createCheckboxForOption.bind(this);
+    this.createButtonForOption = this.createButtonForOption.bind(this);
 
-    <Checkbox
-      name="showOnlyUnowned"
-      options={props.options}
-      onChange={props.onChange}
-    >
-      Show only unowned
-    </Checkbox>
+    this.optionTypeComponentCreators = {
+      checkbox: this.createCheckboxForOption,
+      button: this.createButtonForOption,
+    };
+  }
 
-    <Checkbox
-      name="showOnlyUnmastered"
-      options={props.options}
-      onChange={props.onChange}
-    >
-      Show only unmastered
-    </Checkbox>
+  createComponentForOption(option) {
+    const optionType = this.props.config[option].type;
+    return this.optionTypeComponentCreators[optionType]
+      ? this.optionTypeComponentCreators[optionType](option)
+      : null;
+  }
 
-  </div>
-);
+  createCheckboxForOption(option) {
+    const optionConfig = this.props.config[option];
+    const optionValue = this.props.values[option];
+    return (
+      <Checkbox
+        key={option}
+        name={option}
+        onChange={this.props.onChange}
+        value={optionValue}
+      >
+        {optionConfig.label}
+      </Checkbox>
+    );
+  }
 
-Options.propTypes = {
-  options: PropTypes.shape({
-    showSubCategories: PropTypes.boolean,
-  }).isRequired,
-  onChange: PropTypes.func.isRequired,
-};
+  createButtonForOption(option) {
+    const optionConfig = this.props.config[option];
+    return (
+      <button
+        key={option}
+        onClick={() => this.props.onClick(option)}
+      >
+        {optionConfig.label}
+      </button>
+    );
+  }
+
+  render() {
+
+    const optionNames = Object.keys(this.props.config)
+      .sortBy(option => this.props.config[option].order);
+
+    return (
+      <div className={style.options}>
+        {optionNames
+          .map(option => this.createComponentForOption(option))}
+      </div>
+    );
+  }
+}
 
 export default Options;

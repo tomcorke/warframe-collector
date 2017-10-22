@@ -3,3 +3,4 @@
 /dist/
 /client_dist/
 /config.json
+*.sqlite3
