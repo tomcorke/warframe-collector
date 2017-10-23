@@ -32,6 +32,7 @@
     "minimist": "^1.2.0",
     "node-sass": "^4.5.3",
     "node-watch": "^0.5.5",
+    "promise-polyfill": "^6.0.2",
     "prop-types": "^15.6.0",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
@@ -44,6 +45,7 @@
     "style-loader": "^0.19.0",
     "uglifyjs-webpack-plugin": "^1.0.0-beta.3",
     "uuid": "^3.1.0",
-    "webpack": "^3.8.1"
+    "webpack": "^3.8.1",
+    "whatwg-fetch": "^2.0.3"
   }
 }

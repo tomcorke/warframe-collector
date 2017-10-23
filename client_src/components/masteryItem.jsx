@@ -39,6 +39,10 @@ class MasteryItem extends React.Component {
     this.onClick = this.onClick.bind(this);
   }
 
+  shouldComponentUpdate(nextProps) {
+    return !this.props.item || ITEM_PROPERTIES.some(prop => nextProps.item[prop] != this.props.item[prop]);
+  }
+
   onClick() {
     this.props.onChangeProperty(ONCLICK_PROPERTY, !this.props.item[ONCLICK_PROPERTY]);
   }

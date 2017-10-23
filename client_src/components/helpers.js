@@ -44,9 +44,5 @@ Array.prototype.getUnique = function arrayGetUnique(propName) {
   return getUnique(this, propName);
 };
 
-export default {
-  filterByOptions,
-  sortBy,
-  sortByProp,
-  getUnique,
-};
+export const ITEM_KEY_SELECTOR = item => item.key;
+export const ITEM_SAVEDATA_PROPS = ['owned', 'mastered'];

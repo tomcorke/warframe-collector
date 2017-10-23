@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import storeEngine from 'store/src/store-engine';
 import localStorage from 'store/storages/localStorage';
+import api from './api';
+import { ITEM_KEY_SELECTOR, ITEM_SAVEDATA_PROPS } from './helpers';
 
 import Options from './options';
 import ItemGroup from './itemGroup';
@@ -78,9 +80,6 @@ const DATA_ITEM_MAP = {
   Archwings: 'archwings',
   Companions: 'companions',
 };
-
-const ITEM_KEY_SELECTOR = item => item.key;
-const ITEM_SAVEDATA_PROPS = ['owned', 'mastered'];
 
 function mapDataItemKeys(data, itemTopLevelCategory) {
   const itemNames = Object.keys(data[itemTopLevelCategory]);
