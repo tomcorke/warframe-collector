@@ -26,7 +26,7 @@
     "eslint-plugin-react": "^7.4.0",
     "express": "^4.16.2",
     "extract-text-webpack-plugin": "^3.0.1",
-    "handlebars": "^4.0.10",
+    "handlebars": "^4.1.2",
     "jsdom": "^11.3.0",
     "keypress": "^0.2.1",
     "minimist": "^1.2.0",
